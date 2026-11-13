@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escape Game Volvic</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        volcano: {
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                        },
+                        stone: {
+                            800: '#292524',
+                            900: '#1c1917',
+                        },
+                        volvic: {
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .drag-over { border-color: #f97316 !important; background-color: rgba(249, 115, 22, 0.1) !important; }
+        .draggable-item { cursor: grab; touch-action: none; user-select: none; }
+        .draggable-item:active { cursor: grabbing; }
+    </style>
+</head>
+<body class="h-full flex flex-col bg-slate-950 text-slate-100 selection:bg-orange-500 selection:text-white">
+
+    <!-- Header Navigation -->
+    <header class="bg-slate-900/90 backdrop-blur border-b border-slate-800 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="goHome()">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-600 to-cyan-600 flex items-center justify-center shadow-lg shadow-orange-600/30">
+                    <span class="text-xl">🌋</span>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-lg leading-tight bg-gradient-to-r from-orange-400 via-amber-200 to-cyan-400 bg-clip-text text-transparent">ESCAPE GAME VOLVIC</h1>
+                    <p class="text-xs text-slate-400">Auvergne & Trésors Volcaniques</p>
+                </div>
+            </div>
+
+            <div id="header-team-info" class="hidden flex items-center space-x-3">
+                <div class="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg flex items-center space-x-2">
+                    <i class="fa-solid fa-users text-orange-500"></i>
+                    <span id="current-team-label" class="font-bold text-sm text-slate-200">Équipe -</span>
+                </div>
+                <div class="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg flex items-center space-x-2">
+                    <i class="fa-solid fa-clock text-cyan-400"></i>
+                    <span id="current-team-timer" class="font-mono font-bold text-sm text-cyan-300">00:00:00</span>
+                </div>
+                <button onclick="goHome()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition">
+                    <i class="fa-solid fa-house"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 flex flex-col">
+
+        <!-- 1. HOME VIEW -->
+        <section id="view-home" class="flex-1 flex flex-col justify-center items-center py-6">
+            <div class="text-center max-w-2xl mx-auto mb-8">
+                <div class="inline-block px-4 py-1.5 rounded-full bg-orange-950/80 border border-orange-600/40 text-orange-400 font-semibold text-xs uppercase mb-3">
+                    Aventure Interactive en Auvergne
+                </div>
+                <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight mb-3">
+                    Les Secrets de Volvic
+                </h2>
+                <p class="text-slate-400 text-sm sm:text-base">
+                    Chaque équipe doit résoudre les énigmes en visitant ses balises attitrées le plus rapidement possible.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
+                <!-- Select Team -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400 text-xl mb-4">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Espace Équipes</h3>
+                        <p class="text-slate-400 text-xs mb-6">Sélectionnez votre équipe pour démarrer ou reprendre l'aventure.</p>
+                    </div>
+                    <div id="team-selection-buttons" class="grid grid-cols-2 gap-3">
+                        <button id="btn-team-1" onclick="openTeamNameModal(1)" class="p-3 bg-slate-800 hover:bg-orange-600 text-white rounded-xl border border-slate-700 font-bold transition flex flex-col items-center">
+                            <span>Équipe 1</span>
+                            <span id="sublabel-team-1" class="text-[10px] text-slate-400 font-normal"></span>
+                        </button>
+                        <button id="btn-team-2" onclick="openTeamNameModal(2)" class="p-3 bg-slate-800 hover:bg-orange-600 text-white rounded-xl border border-slate-700 font-bold transition flex flex-col items-center">
+                            <span>Équipe 2</span>
+                            <span id="sublabel-team-2" class="text-[10px] text-slate-400 font-normal"></span>
+                        </button>
+                        <button id="btn-team-3" onclick="openTeamNameModal(3)" class="p-3 bg-slate-800 hover:bg-orange-600 text-white rounded-xl border border-slate-700 font-bold transition flex flex-col items-center">
+                            <span>Équipe 3</span>
+                            <span id="sublabel-team-3" class="text-[10px] text-slate-400 font-normal"></span>
+                        </button>
+                        <button id="btn-team-4" onclick="openTeamNameModal(4)" class="p-3 bg-slate-800 hover:bg-orange-600 text-white rounded-xl border border-slate-700 font-bold transition flex flex-col items-center">
+                            <span>Équipe 4</span>
+                            <span id="sublabel-team-4" class="text-[10px] text-slate-400 font-normal"></span>
+                        </button>
+                    </div>
+                    <div id="joined-team-notice" class="hidden mt-3 p-2 bg-slate-950 border border-orange-500/30 rounded-xl text-center">
+                        <p class="text-xs text-orange-400 font-semibold">Équipe enregistrée : <span id="joined-team-name" class="text-white"></span></p>
+                    </div>
+                </div>
+
+                <!-- Game Master -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-xl mb-4">
+                            <i class="fa-solid fa-user-shield"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Maître du Jeu</h3>
+                        <p class="text-slate-400 text-xs mb-6">Accès réservé au superviseur pour suivre le temps et les balises de toutes les équipes.</p>
+                    </div>
+                    <button onclick="openMasterAuthModal()" class="w-full p-3.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-bold transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-lock"></i>
+                        <span>Accéder au Tableau de Bord</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 1.4 WELCOME MESSAGE VIEW -->
+        <section id="view-welcome-msg" class="hidden flex-1 flex flex-col items-center justify-center py-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-lg w-full shadow-2xl text-center space-y-6">
+                <div class="w-16 h-16 mx-auto rounded-2xl bg-orange-500/20 text-orange-400 text-3xl flex items-center justify-center">👋</div>
+                <div class="space-y-4">
+                    <p class="text-slate-300 text-sm leading-relaxed">
+                        Bienvenue à vous jeunes aventuriers! Etes vous prêts à partir à la chasse aux balises et à répondre aux énigmes concoctées par Auré, Aurel, Royet, La Frite, Titos, Tits (on s'arrêtera là, la liste est trop longue) ? Cliquez sur c'est parti et le chrono se lancera
+                    </p>
+                </div>
+                <button onclick="confirmWelcomeMessage()" class="w-full py-3.5 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-orange-600/30">
+                    C'est parti
+                </button>
+            </div>
+        </section>
+
+        <!-- 1.5 FIRST BEACON PROMPT VIEW -->
+        <section id="view-beacon-prompt" class="hidden flex-1 flex flex-col items-center justify-center py-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl text-center space-y-6">
+                <div class="w-16 h-16 mx-auto rounded-2xl bg-orange-500/20 text-orange-400 text-3xl flex items-center justify-center">🚩</div>
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-2">Premier Objectif</h2>
+                    <p class="text-slate-300 text-sm mb-4">Équipe : <span id="prompt-team-name" class="font-bold text-orange-400"></span></p>
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 mb-4">
+                        <p class="text-xs text-slate-400 mb-1">Rendez-vous à la balise :</p>
+                        <p id="prompt-beacon-target" class="text-2xl font-black text-cyan-300 font-mono">Balise -</p>
+                    </div>
+                    <p class="text-xs text-slate-400 italic">Une fois sur place, cliquez sur le bouton ci-dessous pour démarrer l'énigme.</p>
+                </div>
+                <button onclick="startFirstEnigma()" class="w-full py-3.5 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-orange-600/30">
+                    Démarrer l'énigme
+                </button>
+            </div>
+        </section>
+
+        <!-- 2. GAME MASTER VIEW -->
+        <section id="view-master" class="hidden flex-1 flex flex-col space-y-6">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-white">Supervision Maître du Jeu</h2>
+                    <p class="text-slate-400 text-xs">Suivi en direct des 4 équipes</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="resetAllGames()" class="px-3 py-2 bg-rose-900/60 hover:bg-rose-800 text-rose-200 border border-rose-700/50 rounded-xl font-semibold text-xs transition">
+                        Réinitialiser Tout
+                    </button>
+                    <button onclick="goHome()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl font-semibold text-xs transition">
+                        Quitter
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="master-teams-grid"></div>
+        </section>
+
+        <!-- 3. TEAM GAME VIEW -->
+        <section id="view-game" class="hidden flex-1 flex flex-col space-y-4">
+            <!-- Progress Bar -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg">
+                <div class="flex items-center justify-between text-xs font-semibold text-slate-400 mb-2">
+                    <span>Avancement de l'équipe</span>
+                    <span id="progress-text">Énigme 1 / 9</span>
+                </div>
+                <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
+                    <div id="progress-bar-fill" class="bg-gradient-to-r from-orange-500 to-cyan-400 h-full w-1/9 transition-all duration-300"></div>
+                </div>
+                <div class="flex justify-between mt-3 text-xs" id="progress-dots"></div>
+            </div>
+
+            <!-- Enigma Card -->
+            <div id="enigma-card" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl flex-1 flex flex-col justify-between">
+                <!-- Content dynamically injected -->
+            </div>
+        </section>
+
+        <!-- 4. VICTORY VIEW -->
+        <section id="view-victory" class="hidden flex-1 flex flex-col items-center justify-center text-center py-12">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-lg w-full shadow-2xl">
+                <div class="w-20 h-20 mx-auto rounded-2xl bg-amber-500/20 text-amber-400 text-4xl flex items-center justify-center mb-4">🏆</div>
+                <h2 class="text-3xl font-extrabold text-white mb-2">VICTOIRE !</h2>
+                <p class="text-slate-300 text-sm mb-6">Vous avez terminé l'Escape Game Volvic !</p>
+
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-left space-y-2 mb-6 text-sm">
+                    <div class="flex justify-between"><span class="text-slate-400">Équipe :</span><span id="vic-team-name" class="font-bold text-white"></span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Temps de jeu :</span><span id="vic-raw-time" class="font-mono text-slate-200"></span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Pénalités cumulées :</span><span id="vic-penalty-time" class="font-bold text-orange-400"></span></div>
+                    <div class="border-t border-slate-800 pt-2 flex justify-between"><span class="font-bold text-cyan-400">TEMPS FINAL :</span><span id="vic-final-time" class="font-mono font-black text-xl text-cyan-300"></span></div>
+                </div>
+
+                <button onclick="goHome()" class="w-full py-3 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl transition">Menu Principal</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- TEAM NAME MODAL -->
+    <div id="team-name-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl">
+            <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-users text-orange-400 mr-2"></i>Nom de l'équipe</h3>
+            <p class="text-xs text-slate-400 mb-4">Entrez le nom personnalisé de votre équipe :</p>
+            <input type="text" id="modal-team-name-input" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white mb-4 outline-none focus:border-orange-500 text-xs font-mono" placeholder="Ex: Les Volcaniques">
+            <div class="flex space-x-2">
+                <button onclick="closeTeamNameModal()" class="flex-1 py-2.5 bg-slate-800 text-slate-300 font-bold rounded-xl text-xs">Annuler</button>
+                <button onclick="submitTeamNameModal()" class="flex-1 py-2.5 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-xs">Valider</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MASTER AUTH MODAL -->
+    <div id="master-auth-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl">
+            <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-lock text-cyan-400 mr-2"></i>Accès Sécurisé</h3>
+            <input type="password" id="master-pass-input" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white mb-4 outline-none focus:border-cyan-500 font-mono" placeholder="Mot de passe">
+            <div class="flex space-x-2">
+                <button onclick="closeMasterAuthModal()" class="flex-1 py-2.5 bg-slate-800 text-slate-300 font-bold rounded-xl text-xs">Annuler</button>
+                <button onclick="submitMasterAuth()" class="flex-1 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl text-xs">Valider</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HINT POPUP MODAL -->
+    <div id="hint-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl">
+            <div class="w-10 h-10 rounded-xl bg-orange-500/20 text-orange-400 flex items-center justify-center mb-3">
+                <i class="fa-solid fa-lightbulb"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2">Utiliser un indice ?</h3>
+            <p class="text-xs text-slate-300 mb-4">Cette action ajoutera une <strong class="text-orange-400">pénalité de +2 minutes</strong> à votre temps final.</p>
+            <div class="flex space-x-2">
+                <button onclick="closeHintModal()" class="flex-1 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl text-xs">Annuler</button>
+                <button onclick="confirmUseHint()" class="flex-1 py-2 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-xs">Confirmer (+2 min)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FINAL QUESTION MODAL -->
+    <div id="final-question-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="w-12 h-12 mx-auto rounded-2xl bg-amber-500/20 text-amber-400 text-2xl flex items-center justify-center">🏃‍♂️</div>
+            <h3 class="text-lg font-bold text-white text-center">Stoppez le chrono !</h3>
+            <p class="text-xs text-slate-300 text-center leading-relaxed">
+                Qui est le vainqueur masculin de l'édition 2024 de la Grande Traversée des Volcans d'Auvergne ?
+            </p>
+            <input type="text" id="final-question-input" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white outline-none focus:border-amber-500 text-xs font-mono" placeholder="Votre réponse...">
+            <button onclick="submitFinalQuestion()" class="w-full py-3 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-amber-600/30">Valider</button>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div id="toast-bg" class="bg-slate-800 border border-slate-700 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 text-xs font-semibold">
+            <span id="toast-icon">ℹ️</span>
+            <span id="toast-text">Message</span>
+        </div>
+    </div>
+
+    <script>
+        let currentTeamId = null;
+        let pendingSelectedTeamId = null;
+        let timerInterval = null;
+        let pendingHintIndex = null;
+        let currentE9Answers = { q1: null, q2: null, q3: null };
+        const formInputState = {};
+
+        function getGameState() {
+            let data = localStorage.getItem('volvic_escape_game_v3');
+            if (!data) {
+                data = {
+                    teams: {
+                        1: createTeamState(1, { 1: 11, 2: 9, 3: 6, 4: 7, 5: 3, 6: 1, 7: 10, 8: 5 }),
+                        2: createTeamState(2, { 1: 12, 2: 10, 3: 9, 4: 3, 5: 7, 6: 1, 7: 6, 8: 5 }),
+                        3: createTeamState(3, { 1: 13, 2: 3, 3: 10, 4: 9, 5: 6, 6: 1, 7: 7, 8: 5 }),
+                        4: createTeamState(4, { 1: 14, 2: 6, 3: 7, 4: 10, 5: 3, 6: 1, 7: 9, 8: 5 })
+                    }
+                };
+                localStorage.setItem('volvic_escape_game_v3', JSON.stringify(data));
+            } else {
+                data = JSON.parse(data);
+            }
+            return data;
+        }
+
+        function saveGameState(state) {
+            localStorage.setItem('volvic_escape_game_v3', JSON.stringify(state));
+        }
+
+        function createTeamState(id, assignedBeacons) {
+            return {
+                teamId: id,
+                customName: `Équipe ${id}`,
+                currentEnigma: 1,
+                startTime: null,
+                elapsedSeconds: 0,
+                hintsUsed: 0,
+                penaltySeconds: 0,
+                beacons: {
+                    1: assignedBeacons[1],
+                    2: assignedBeacons[2],
+                    3: assignedBeacons[3],
+                    4: assignedBeacons[4],
+                    5: assignedBeacons[5],
+                    6: assignedBeacons[6],
+                    7: assignedBeacons[7],
+                    8: assignedBeacons[8],
+                    9: "Final"
+                },
+                unlockedHints: {},
+                answersSubmitted: {},
+                completed: false
+            };
+        }
+
+        function getJoinedTeamId() {
+            return localStorage.getItem('volvic_joined_team_id');
+        }
+
+        function setJoinedTeamId(id) {
+            localStorage.setItem('volvic_joined_team_id', id);
+        }
+
+        function updateHomeTeamButtons() {
+            const joinedId = getJoinedTeamId();
+            const state = getGameState();
+            const noticeEl = document.getElementById('joined-team-notice');
+            const joinedNameEl = document.getElementById('joined-team-name');
+
+            for (let id = 1; id <= 4; id++) {
+                const btn = document.getElementById(`btn-team-${id}`);
+                const sublabel = document.getElementById(`sublabel-team-${id}`);
+                const t = state.teams[id];
+
+                if (t.customName && t.customName !== `Équipe ${id}`) {
+                    sublabel.textContent = t.customName;
+                } else {
+                    sublabel.textContent = '';
+                }
+
+                if (joinedId && parseInt(joinedId) !== id) {
+                    btn.disabled = true;
+                    btn.classList.add('opacity-40', 'cursor-not-allowed');
+                    btn.classList.remove('hover:bg-orange-600');
+                } else {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-40', 'cursor-not-allowed');
+                    btn.classList.add('hover:bg-orange-600');
+                }
+            }
+
+            if (joinedId) {
+                const joinedTeam = state.teams[joinedId];
+                noticeEl.classList.remove('hidden');
+                joinedNameEl.textContent = `${joinedTeam.customName} (Équipe ${joinedId})`;
+            } else {
+                noticeEl.classList.add('hidden');
+            }
+        }
+
+        function goHome() {
+            clearInterval(timerInterval);
+            document.getElementById('view-home').classList.remove('hidden');
+            document.getElementById('view-welcome-msg').classList.add('hidden');
+            document.getElementById('view-beacon-prompt').classList.add('hidden');
+            document.getElementById('view-master').classList.add('hidden');
+            document.getElementById('view-game').classList.add('hidden');
+            document.getElementById('view-victory').classList.add('hidden');
+            document.getElementById('header-team-info').classList.add('hidden');
+            currentTeamId = null;
+            updateHomeTeamButtons();
+        }
+
+        function openTeamNameModal(id) {
+            const joinedId = getJoinedTeamId();
+            if (joinedId && parseInt(joinedId) !== id) {
+                showToast(`Vous faites déjà partie de l'Équipe ${joinedId}`, true);
+                return;
+            }
+            pendingSelectedTeamId = id;
+            const state = getGameState();
+            const team = state.teams[id];
+            document.getElementById('modal-team-name-input').value = team.customName || `Équipe ${id}`;
+            document.getElementById('team-name-modal').classList.remove('hidden');
+        }
+
+        function closeTeamNameModal() {
+            pendingSelectedTeamId = null;
+            document.getElementById('team-name-modal').classList.add('hidden');
+        }
+
+        function submitTeamNameModal() {
+            if (!pendingSelectedTeamId) return;
+            const id = pendingSelectedTeamId;
+            const customName = document.getElementById('modal-team-name-input').value.trim() || `Équipe ${id}`;
+            
+            const state = getGameState();
+            const team = state.teams[id];
+            team.customName = customName;
+            saveGameState(state);
+
+            if (!getJoinedTeamId()) {
+                setJoinedTeamId(id);
+            }
+
+            closeTeamNameModal();
+
+            currentTeamId = id;
+            if (team.completed) {
+                showVictoryScreen(team);
+            } else if (team.startTime) {
+                startTimer();
+                document.getElementById('view-beacon-prompt').classList.add('hidden');
+                document.getElementById('view-game').classList.remove('hidden');
+                document.getElementById('header-team-info').classList.remove('hidden');
+                document.getElementById('current-team-label').textContent = team.customName;
+                renderEnigma(team.currentEnigma);
+            } else {
+                showWelcomeMessage(id);
+            }
+        }
+
+        function showWelcomeMessage(id) {
+            currentTeamId = id;
+            document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-welcome-msg').classList.remove('hidden');
+        }
+
+        function confirmWelcomeMessage() {
+            const state = getGameState();
+            const team = state.teams[currentTeamId];
+
+            if (!team.startTime && !team.completed) {
+                team.startTime = Date.now();
+                saveGameState(state);
+            }
+
+            document.getElementById('view-welcome-msg').classList.add('hidden');
+            showBeaconPrompt(currentTeamId);
+        }
+
+        function showBeaconPrompt(id) {
+            currentTeamId = id;
+            const state = getGameState();
+            const team = state.teams[id];
+
+            document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-welcome-msg').classList.add('hidden');
+            document.getElementById('view-beacon-prompt').classList.remove('hidden');
+            document.getElementById('prompt-team-name').textContent = team.customName;
+            
+            const currentEnigmaNum = team.currentEnigma;
+            const beaconTarget = team.beacons[currentEnigmaNum] || team.beacons[1];
+            document.getElementById('prompt-beacon-target').textContent = `Balise ${beaconTarget}`;
+        }
+
+        function startFirstEnigma() {
+            const state = getGameState();
+            const team = state.teams[currentTeamId];
+
+            document.getElementById('view-beacon-prompt').classList.add('hidden');
+            document.getElementById('view-game').classList.remove('hidden');
+            document.getElementById('header-team-info').classList.remove('hidden');
+            document.getElementById('current-team-label').textContent = team.customName;
+
+            startTimer();
+            if (team.completed) showVictoryScreen(team);
+            else renderEnigma(team.currentEnigma);
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                const state = getGameState();
+                if (currentTeamId && state.teams[currentTeamId] && !state.teams[currentTeamId].completed) {
+                    state.teams[currentTeamId].elapsedSeconds += 1;
+                    saveGameState(state);
+                    updateTimerDisplay();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            if (!currentTeamId) return;
+            const team = getGameState().teams[currentTeamId];
+            if (!team) return;
+            const total = team.elapsedSeconds + team.penaltySeconds;
+            const h = String(Math.floor(total / 3600)).padStart(2, '0');
+            const m = String(Math.floor((total % 3600) / 60)).padStart(2, '0');
+            const s = String(total % 60).padStart(2, '0');
+            document.getElementById('current-team-timer').textContent = `${h}:${m}:${s}`;
+        }
+
+        function showToast(msg, isErr = false) {
+            const toast = document.getElementById('toast');
+            const toastBg = document.getElementById('toast-bg');
+            document.getElementById('toast-text').textContent = msg;
+            document.getElementById('toast-icon').textContent = isErr ? '❌' : '✅';
+            toastBg.className = isErr 
+                ? "bg-rose-900 border border-rose-700 text-rose-100 px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 text-xs font-semibold"
+                : "bg-emerald-900 border border-emerald-700 text-emerald-100 px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 text-xs font-semibold";
+            
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3500);
+        }
+
+        // Master Auth
+        function openMasterAuthModal() {
+            document.getElementById('master-pass-input').value = '';
+            document.getElementById('master-auth-modal').classList.remove('hidden');
+        }
+        function closeMasterAuthModal() {
+            document.getElementById('master-auth-modal').classList.add('hidden');
+        }
+        function submitMasterAuth() {
+            const pass = document.getElementById('master-pass-input').value;
+            if (pass === 'VOLVIC2026' || pass === '1234') {
+                closeMasterAuthModal();
+                openMasterDashboard();
+            } else {
+                showToast("Code d'accès incorrect", true);
+            }
+        }
+
+        function openMasterDashboard() {
+            clearInterval(timerInterval);
+            document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-welcome-msg').classList.add('hidden');
+            document.getElementById('view-beacon-prompt').classList.add('hidden');
+            document.getElementById('view-game').classList.add('hidden');
+            document.getElementById('view-victory').classList.add('hidden');
+            document.getElementById('header-team-info').classList.add('hidden');
+            document.getElementById('view-master').classList.remove('hidden');
+            renderMasterGrid();
+        }
+
+        function renderMasterGrid() {
+            const state = getGameState();
+            const grid = document.getElementById('master-teams-grid');
+            grid.innerHTML = '';
+            for (let id = 1; id <= 4; id++) {
+                const t = state.teams[id];
+                const total = t.elapsedSeconds + t.penaltySeconds;
+                const m = String(Math.floor(total / 60)).padStart(2, '0');
+                const s = String(total % 60).padStart(2, '0');
+
+                grid.innerHTML += `
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-3 border-b border-slate-800 pb-2">
+                                <div>
+                                    <h3 class="font-bold text-white text-base">Équipe ${id}</h3>
+                                    <p class="text-xs text-orange-400 font-semibold">${t.customName || `Équipe ${id}`}</p>
+                                </div>
+                                <span class="text-xs px-2.5 py-1 rounded-full border ${t.completed ? 'bg-emerald-950 text-emerald-400 border-emerald-700' : 'bg-amber-950 text-amber-400 border-amber-700'} font-semibold">
+                                    ${t.completed ? 'Terminé' : `Énigme ${t.currentEnigma}/9`}
+                                </span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 text-xs mb-3">
+                                <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                                    <span class="text-slate-400 block">Temps Total (+Pénalité)</span>
+                                    <span class="font-mono font-bold text-cyan-300 text-sm">${m}:${s}</span>
+                                </div>
+                                <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                                    <span class="text-slate-400 block">Pénalités Cumulées</span>
+                                    <span class="font-bold text-orange-400 text-sm">+${t.penaltySeconds / 60} min (${t.hintsUsed} indices)</span>
+                                </div>
+                            </div>
+                            <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 text-xs mb-3">
+                                <span class="text-slate-400 block mb-1">Balises attribuées :</span>
+                                <div class="flex flex-wrap gap-1 font-mono text-[11px]">
+                                    <span class="bg-slate-800 px-1.5 py-0.5 rounded">E1➔<b>${t.beacons[1]}</b></span>
+                                    <span class="bg-slate-800 px-1.5 py-0.5 rounded">E2➔<b>${t.beacons[2]}</b></span>
+                                    <span class="bg-slate-800 px-1.5 py-0.5 rounded">E3➔<b>${t.beacons[3]}</b></span>
+                                    <span class="bg-slate-800 px-1.5 py-0.5 rounded">E4➔<b>${t.beacons[4]}</b></span>
+                                    <span class="bg-slate-800 px-1.5 py-0.5 rounded">E5➔<b>${t.beacons[5]}</b></span>
+                                    <span class="bg-slate-800 px-1.5 py-0.5 rounded">E6➔<b>${t.beacons[6]}</b></span>
+                                    <span class="bg-slate-800 px-1.5 py-0.5 rounded">E7➔<b>${t.beacons[7]}</b></span>
+                                    <span class="bg-slate-800 px-1.5 py-0.5 rounded">E8➔<b>${t.beacons[8]}</b></span>
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 text-xs mb-3">
+                                <span class="text-slate-400 block mb-1.5 font-semibold">Accéder directement à l'énigme :</span>
+                                <div class="flex flex-wrap gap-1">
+                                    ${[1,2,3,4,5,6,7,8,9].map(num => `
+                                        <button onclick="masterSetTeamEnigma(${id}, ${num})" class="w-6 h-6 rounded flex items-center justify-center font-bold text-[11px] transition ${t.currentEnigma === num ? 'bg-cyan-600 text-white ring-1 ring-cyan-300' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">${num}</button>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="masterSetTeamEnigma(${id}, ${t.currentEnigma})" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 rounded-lg border border-slate-700">Rejoindre / Voir Équipe ${id}</button>
+                    </div>
+                `;
+            }
+        }
+
+        function masterSetTeamEnigma(teamId, enigmaNum) {
+            const state = getGameState();
+            state.teams[teamId].currentEnigma = enigmaNum;
+            saveGameState(state);
+            currentTeamId = teamId;
+            document.getElementById('view-master').classList.add('hidden');
+            document.getElementById('view-game').classList.remove('hidden');
+            document.getElementById('header-team-info').classList.remove('hidden');
+            document.getElementById('current-team-label').textContent = state.teams[teamId].customName;
+            startTimer();
+            if (state.teams[teamId].completed) showVictoryScreen(state.teams[teamId]);
+            else renderEnigma(enigmaNum);
+            showToast(`Équipe ${teamId} sur l'énigme ${enigmaNum}`);
+        }
+
+        function resetAllGames() {
+            if (confirm("Réinitialiser toutes les équipes et réinitialiser les identifiants ?")) {
+                localStorage.removeItem('volvic_escape_game_v3');
+                localStorage.removeItem('volvic_joined_team_id');
+                getGameState();
+                renderMasterGrid();
+                showToast("Réinitialisation effectuée");
+            }
+        }
+
+        function openHintModal(idx) {
+            saveCurrentInputState();
+            pendingHintIndex = idx;
+            document.getElementById('hint-modal').classList.remove('hidden');
+        }
+        function closeHintModal() {
+            pendingHintIndex = null;
+            document.getElementById('hint-modal').classList.add('hidden');
+        }
+        function confirmUseHint() {
+            if (pendingHintIndex === null || !currentTeamId) return;
+            const state = getGameState();
+            const team = state.teams[currentTeamId];
+            const eIdx = team.currentEnigma;
+
+            if (!team.unlockedHints[eIdx]) team.unlockedHints[eIdx] = [];
+            if (!team.unlockedHints[eIdx].includes(pendingHintIndex)) {
+                team.unlockedHints[eIdx].push(pendingHintIndex);
+                team.hintsUsed += 1;
+                team.penaltySeconds += 120;
+                saveGameState(state);
+                showToast("Indice débloqué (+2 min)");
+            }
+            closeHintModal();
+            renderEnigma(eIdx);
+            restoreInputState();
+        }
+
+        function saveCurrentInputState() {
+            const inputs = document.querySelectorAll('#enigma-card input');
+            inputs.forEach(inp => { formInputState[inp.id] = inp.value; });
+        }
+        function restoreInputState() {
+            Object.keys(formInputState).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = formInputState[id];
+            });
+        }
+
+        function renderEnigma(eNum) {
+            const team = getGameState().teams[currentTeamId];
+            const card = document.getElementById('enigma-card');
+
+            document.getElementById('progress-text').textContent = `Énigme ${eNum} / 9`;
+            document.getElementById('progress-bar-fill').style.width = `${(eNum / 9) * 100}%`;
+            
+            const dots = document.getElementById('progress-dots');
+            dots.innerHTML = '';
+            for(let i=1; i<=9; i++) {
+                let cl = "w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs ";
+                if (i === eNum) cl += "bg-orange-500 text-white ring-2 ring-orange-300";
+                else if (i < eNum) cl += "bg-emerald-600 text-white";
+                else cl += "bg-slate-800 text-slate-500";
+                dots.innerHTML += `<div class="${cl}">${i}</div>`;
+            }
+
+            const unlocked = team.unlockedHints[eNum] || [];
+
+            switch(eNum) {
+                case 1: renderE1(card, team, unlocked); break;
+                case 2: renderE2(card, team, unlocked); break;
+                case 3: renderE3(card, team, unlocked); break;
+                case 4: renderE4(card, team, unlocked); break;
+                case 5: renderE5(card, team, unlocked); break;
+                case 6: renderE6(card, team, unlocked); break;
+                case 7: renderE7(card, team, unlocked); break;
+                case 8: renderE8(card, team, unlocked); break;
+                case 9: renderE9(card, team, unlocked); break;
+            }
+            restoreInputState();
+        }
+
+        // --- E1 ---
+        function renderE1(card, team, unlocked) {
+            card.innerHTML = `
+                <div>
+                    <span class="text-xs font-bold text-orange-400 uppercase tracking-widest">Énigme 1</span>
+                    <h2 class="text-xl font-bold text-white mb-3">Interro surprise de géologie</h2>
+
+                    <div class="text-xs text-slate-300 space-y-3 mb-4">
+                        <p>On commence par une interro surprise pour vérifier si vous avez bien révisé vos cours de géologie.</p>
+                        <p>Les deux types d'éruption ayant conduit à la création des volcans d'Auvergne vous donneront la clé des secrets de la Chaîne des Puys</p>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-4">
+                            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-col items-center justify-between">
+                                <div class="w-full flex items-center gap-2 mb-2">
+                                    <span class="bg-orange-500 text-slate-950 font-black text-xs px-2 py-0.5 rounded-md shadow">0</span>
+                                    <span class="font-bold text-xs text-white uppercase tracking-wider">Péléen</span>
+                                </div>
+                                <div class="w-full h-40 flex items-center justify-center bg-slate-900 rounded-lg p-1 border border-slate-800">
+                                    <img src="https://i.ibb.co/KjwyFLv6/IMG-0ba0c641-28be-4f8b-94ed-8b9e8a7fa677.jpg" alt="Éruption Péléenne" class="max-h-full max-w-full object-contain rounded">
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-col items-center justify-between">
+                                <div class="w-full flex items-center gap-2 mb-2">
+                                    <span class="bg-orange-500 text-slate-950 font-black text-xs px-2 py-0.5 rounded-md shadow">1</span>
+                                    <span class="font-bold text-xs text-white uppercase tracking-wider">Hawaïen</span>
+                                </div>
+                                <div class="w-full h-40 flex items-center justify-center bg-slate-900 rounded-lg p-1 border border-slate-800">
+                                    <img src="https://i.ibb.co/C3MKQv3J/IMG-3b5856e9-8aee-402c-a52c-ed6eac383a91.jpg" alt="Éruption Hawaïenne" class="max-h-full max-w-full object-contain rounded">
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-col items-center justify-between">
+                                <div class="w-full flex items-center gap-2 mb-2">
+                                    <span class="bg-orange-500 text-slate-950 font-black text-xs px-2 py-0.5 rounded-md shadow">2</span>
+                                    <span class="font-bold text-xs text-white uppercase tracking-wider">Strombolien</span>
+                                </div>
+                                <div class="w-full h-40 flex items-center justify-center bg-slate-900 rounded-lg p-1 border border-slate-800">
+                                    <img src="https://i.ibb.co/RkBJdBD3/IMG-b870904b-e008-49ff-9854-ed15a68737fc.jpg" alt="Éruption Strombolienne" class="max-h-full max-w-full object-contain rounded">
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-col items-center justify-between">
+                                <div class="w-full flex items-center gap-2 mb-2">
+                                    <span class="bg-orange-500 text-slate-950 font-black text-xs px-2 py-0.5 rounded-md shadow">3</span>
+                                    <span class="font-bold text-xs text-white uppercase tracking-wider">Michelien</span>
+                                </div>
+                                <div class="w-full h-40 flex items-center justify-center bg-slate-900 rounded-lg p-1 border border-slate-800">
+                                    <img src="https://i.ibb.co/RGZRT8PC/Screenshot-20261031-211804-Google.jpg" alt="Stade Michelien" class="max-h-full max-w-full object-contain rounded">
+                                </div>
+                            </div>
+                        </div>
+
+                        <p>Multipliez la clé par le nombre de départements qui composaient la région Auvergne, vous obtiendrez le nombre de volcans assoupis composant les 35 km de la Chaîne des Puys.</p>
+                        <input type="number" id="e1-input1" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white font-mono" placeholder="Nombre de volcans...">
+
+                        <p>Multipliez la clé par le numéro d'un autre département de la nouvelle région Auvergne Rhône Alpes riche en fromages à savourer fondus, vous découvrirez l'altitude exacte du Géant des Dômes.</p>
+                        <input type="number" id="e1-input2" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white font-mono" placeholder="Altitude...">
+                    </div>
+
+                    ${renderHintsHtml(1, unlocked, [
+                        "les volcans auvergnats ont des cousins italiens et martiniquais",
+                        `affichage de la carte : <div class="mt-3 bg-slate-950 p-3 sm:p-4 rounded-xl border border-slate-800 flex flex-col items-center w-full"><span class="text-[11px] font-bold text-slate-400 mb-2 text-center">CARTE DES DÉPARTEMENTS D'AUVERGNE-RHÔNE-ALPES</span><div class="w-full bg-slate-900 rounded-lg p-2 border border-slate-800 flex justify-center"><img src="https://i.ibb.co/Jj9qx9wr/1793535189908.jpg" alt="Carte des Départements" class="w-full max-w-lg h-auto object-contain rounded"></div></div>`
+                    ])}
+                </div>
+                <div class="pt-3 border-t border-slate-800 flex justify-end">
+                    <button onclick="submitE1()" class="px-5 py-2.5 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-xs transition">Valider</button>
+                </div>
+            `;
+        }
+
+        function submitE1() {
+            saveCurrentInputState();
+            const val1 = document.getElementById('e1-input1').value.trim();
+            const val2 = parseInt(document.getElementById('e1-input2').value.trim());
+
+            if (val1 === '80' && (val2 >= 1460 && val2 <= 1480)) {
+                const team = getGameState().teams[currentTeamId];
+                showSuccessModal(
+                    `Vous êtes bon en calcul mental, bravo! Rendez-vous à la balise ${team.beacons[2]} pour approfondir vos connaissances sur les puys.`,
+                    () => advanceEnigma(2)
+                );
+            } else {
+                showToast("Proposition incorrecte, retentez votre chance !", true);
+            }
+        }
+
+        // --- E2 ---
+        function renderE2(card, team, unlocked) {
+            card.innerHTML = `
+                <div>
+                    <span class="text-xs font-bold text-orange-400 uppercase tracking-widest">Énigme 2</span>
+                    <h2 class="text-xl font-bold text-white mb-3">Découverte Volcanique des Monts Dômes</h2>
+
+                    <div class="text-xs text-slate-300 space-y-3 mb-4">
+                        <p>Maintenant que vous avez fait connaissance avec la Chaîne des Puys, zoomons sur un volcan par lequel Jean Etienne Guettard découvrit en 1751 la nature volcanique des Monts Dômes dont les Auvergnats n'avaient pas conscience jusque là. Pour découvrir son petit nom, vous devez trouver 4 lettres :</p>
+                        
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <p><strong>1/</strong> Lettre grecque, c'est aussi dans ce plus simple appareil que je peux profiter des thermes de Chatel-Guyon, Vichy ou La Bourboule</p>
+                            <p><strong>2/</strong> Boucle au départ de Volvic et portant fièrement le numéro 441, je parcours 114 km autour de la Chaîne des Puys</p>
+                        </div>
+
+                        <input type="text" id="e2-input" maxlength="4" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white font-mono uppercase tracking-widest" placeholder="Entrez le code à 4 lettres...">
+                    </div>
+
+                    ${renderHintsHtml(2, unlocked, [
+                        "la lettre grecque vient après le mu",
+                        "on aurait aussi pu citer le 20 en Corse, le 34 en Bretagne ou le 10 dans les Pyrénées"
+                    ])}
+                </div>
+                <div class="pt-3 border-t border-slate-800 flex justify-end">
+                    <button onclick="submitE2()" class="px-5 py-2.5 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-xs transition">Valider</button>
+                </div>
+            `;
+        }
+
+        function submitE2() {
+            saveCurrentInputState();
+            const val = document.getElementById('e2-input').value.trim().toUpperCase();
+            if (val === 'NUGR') {
+                const team = getGameState().teams[currentTeamId];
+                showSuccessModal(
+                    `Bien joué! Il s'agit effectivement du Puy de la Nugère ! Pas le Puy le plus spectaculaire de la Chaîne des Puys, il est cependant à l'origine de merveilleux trésors depuis son éruption il y a 13 000 ans! Saurez-vous les découvrir? Rendez-vous à la balise ${team.beacons[3]}`,
+                    () => advanceEnigma(3)
+                );
+            } else {
+                showToast("Proposition incorrecte, retentez votre chance !", true);
+            }
+        }
+
+        // --- E3 ---
+        function renderE3(card, team, unlocked) {
+            card.innerHTML = `
+                <div>
+                    <span class="text-xs font-bold text-orange-400 uppercase tracking-widest">Énigme 3</span>
+                    <h2 class="text-xl font-bold text-white mb-3">Cristaux et Pierre Emblématique</h2>
+
+                    <div class="text-xs text-slate-300 space-y-3 mb-4">
+                        <p>Les entrailles des volcans regorgent de trésors. Qui dit trésors, dit forcément pierres précieuses et qui dit pierres précieuses, dit cristaux! Après la géologie, il est donc l'heure de faire appel à vos souvenirs enfouis de cristallo pour découvrir la pierre emblématique de la région dont les sculpteurs font des merveilles!</p>
+
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-col items-center my-3">
+                            <span class="text-[11px] font-bold text-slate-400 mb-2 text-center">Diagramme de classification :</span>
+                            <img src="https://i.ibb.co/bRMFCTmC/IMG-83f5e865-de95-4e33-9ffe-fd2b213015fc.png" alt="Diagramme Na2O+K2O vs SiO2" class="w-full max-w-md rounded-xl border border-slate-800">
+                        </div>
+
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 mb-3">
+							<span class="text-[11px] font-bold text-slate-400 block mb-3 text-center uppercase tracking-wider">Vues microscopiques des cristaux</span>
+							<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+								<div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 flex flex-col items-center">
+									<span class="font-bold text-xs text-orange-400 mb-1.5 uppercase tracking-wide">1. Beryl</span>
+									<img src="https://i.ibb.co/whmtW6p0/1793535225642.jpg" alt="Beryl" class="w-full h-auto max-h-48 object-contain rounded-md border border-slate-800">
+								</div>
+								<div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 flex flex-col items-center">
+									<span class="font-bold text-xs text-orange-400 mb-1.5 uppercase tracking-wide">2. Feldspath</span>
+									<img src="https://i.ibb.co/84XDswQr/1793535256319.jpg" alt="Feldspath" class="w-full h-auto max-h-48 object-contain rounded-md border border-slate-800">
+								</div>
+								<div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 flex flex-col items-center">
+									<span class="font-bold text-xs text-orange-400 mb-1.5 uppercase tracking-wide">3. Corindon</span>
+									<img src="https://i.ibb.co/rKJ0rWdt/1793535212264.jpg" alt="Corindon" class="w-full h-auto max-h-48 object-contain rounded-md border border-slate-800">
+								</div>
+								<div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 flex flex-col items-center">
+									<span class="font-bold text-xs text-orange-400 mb-1.5 uppercase tracking-wide">4. Amphibole</span>
+									<img src="https://i.ibb.co/S4Tp5JmD/1793535235547.jpg" alt="Amphibole" class="w-full h-auto max-h-48 object-contain rounded-md border border-slate-800">
+								</div>
+							</div>
+						</div>
+
+                        <input type="text" id="e3-input" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white font-mono" placeholder="Nom de la pierre...">
+                    </div>
+
+                    ${renderHintsHtml(3, unlocked, [
+                        "avez-vous bien observé les vue microscopiques des cristaux",
+                        "pour déchiffrer le graphique, il vous faut trouver 2 nombres"
+                    ])}
+                </div>
+                <div class="pt-3 border-t border-slate-800 flex justify-end">
+                    <button onclick="submitE3()" class="px-5 py-2.5 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-xs transition">Valider</button>
+                </div>
+            `;
+        }
+
+        function submitE3() {
+            saveCurrentInputState();
+            const val = document.getElementById('e3-input').value.trim().toLowerCase();
+            const ok = ['trachy-andésite', 'trachyandésite', 'trachyandesite', 'trachy andesite', 'trachy-andesite'];
+            if (ok.includes(val)) {
+                const team = getGameState().teams[currentTeamId];
+                showSuccessModal(
+                    `Bravo, vous avez trouvé la trachyandésite, plus communément appelée en Auvergne la pierre de Volvic. Elle est extraite tout proche d'ici. Après avoir fait travailler les méninges, place aux travaux manuels, enfilez vos EPI et rendez-vous à la balise ${team.beacons[4]}`,
+                    () => advanceEnigma(4)
+                );
+            } else {
+                showToast("Proposition incorrecte, retentez votre chance !", true);
+            }
+        }
+
+        // --- E4 ---
+        function renderE4(card, team, unlocked) {
+            card.innerHTML = `
+                <div>
+                    <span class="text-xs font-bold text-orange-400 uppercase tracking-widest">Énigme 4</span>
+                    <h2 class="text-xl font-bold text-white mb-3">Le Secret du Maître Carrier</h2>
+
+                    <div class="text-xs text-slate-300 space-y-3 mb-4">
+                        <p>L'exploitation de la pierre de Volvic prend son essor au XIIIe siècle avec la construction de la cathédrale de Clermont-Ferrand. Au XIXe siècle elle connaît une nouvelle dynamique avec la modernisation des méthodes d'extraction et l'export dans toute la France de statues, monuments funéraires et autres éléments décoratifs. A l'époque la pierre de Volvic fait vivre carriers, tailleurs et sculpteurs. Saurez-vous retrouver le code de la caisse à outils pour aller les aider ?</p>
+                        
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-col items-center my-3">
+                            <img src="https://i.ibb.co/BMWkvVf/1793478020566.jpg" alt="Équation des Outils du Maître Carrier" class="w-full max-w-md rounded-xl border border-slate-800">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 pt-1">
+                            <div><label class="text-[10px] text-slate-400">Polka :</label><input type="number" id="e4-polka" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white font-mono"></div>
+                            <div><label class="text-[10px] text-slate-400">Masse :</label><input type="number" id="e4-masse" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white font-mono"></div>
+                            <div><label class="text-[10px] text-slate-400">Ciseau :</label><input type="number" id="e4-ciseau" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white font-mono"></div>
+                            <div><label class="text-[10px] text-slate-400">Chasse :</label><input type="number" id="e4-chasse" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white font-mono"></div>
+                        </div>
+                    </div>
+
+                    ${renderHintsHtml(4, unlocked, [
+                        "la polka vaut 3. Aller creusez vous un peu les méninges!",
+                        "remplacez la chasse dans la 3ème ligne en utilisant la 4ème ligne"
+                    ])}
+                </div>
+                <div class="pt-3 border-t border-slate-800 flex justify-end">
+                    <button onclick="submitE4()" class="px-5 py-2.5 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-xs transition">Valider</button>
+                </div>
+            `;
+        }
+
+        function submitE4() {
+            saveCurrentInputState();
+            const p = parseInt(document.getElementById('e4-polka').value);
+            const m = parseInt(document.getElementById('e4-masse').value);
+            const ci = parseInt(document.getElementById('e4-ciseau').value);
+            const ch = parseInt(document.getElementById('e4-chasse').value);
+
+            if (p === 3 && m === 4 && ci === 2 && ch === 6) {
+                const team = getGameState().teams[currentTeamId];
+                showSuccessModal(
+                    `Bien joué, vous avez résolu l'équation! Qu'est ce que vous attendez maintenant ?! Prenez les outils et au travail! Rendez vous à la balise ${team.beacons[5]}`,
+                    () => advanceEnigma(5)
+                );
+            } else {
+                showToast("Proposition incorrecte, retentez votre chance !", true);
+            }
+        }
+
+        // --- E5 ---
+        function renderE5(card, team, unlocked) {
+            const attemptsLeft = 3 - (team.answersSubmitted[5] || 0);
+
+            card.innerHTML = `
+                <div>
+                    <span class="text-xs font-bold text-orange-400 uppercase tracking-widest">Énigme 5</span>
+                    <h2 class="text-xl font-bold text-white mb-3">Le Casse-croûte des Carriers</h2>
+
+                    <div class="text-xs text-slate-300 space-y-3 mb-4">
+                        <p>Après cette rude découverte du travail à la carrière, c'est bientôt l'heure de partager le casse-croûte avec les carriers. Mais pour y être invités il vous faut d'abord répondre à cette question :</p>
+                        
+                        <p class="font-bold text-sm text-amber-300">Combien de fromages d'Auvergne bénéficient d'une AOP ? Attention vous n'avez que 3 chances (chaque fausse réponse ajoute 1 min au chrono)</p>
+                        <p class="text-[11px] text-orange-400 italic">Essais restants : ${attemptsLeft}</p>
+
+                        <input type="number" id="e5-input" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white font-mono" placeholder="Nombre de fromages AOP...">
+                    </div>
+
+                    ${renderHintsHtml(5, unlocked, [])}
+                </div>
+                <div class="pt-3 border-t border-slate-800 flex justify-end">
+                    <button onclick="submitE5()" ${attemptsLeft <= 0 ? 'disabled' : ''} class="px-5 py-2.5 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-xs transition disabled:opacity-50">Valider</button>
+                </div>
+            `;
+        }
+
+        function submitE5() {
+            saveCurrentInputState();
+            const state = getGameState();
+            const team = state.teams[currentTeamId];
+            let attempts = (team.answersSubmitted[5] || 0) + 1;
+            team.answersSubmitted[5] = attempts;
+
+            const val = parseInt(document.getElementById('e5-input').value);
+
+            if (val === 5) {
+                saveGameState(state);
+                showSuccessModal(
+                    `Cinq est effectivement la bonne réponse, saurez-vous les reconnaître à la prochaine étape à la balise ${team.beacons[6]}`,
+                    () => advanceEnigma(6)
+                );
+            } else {
+                team.penaltySeconds += 60;
+                saveGameState(state);
+                if (attempts >= 3) {
+                    showSuccessModal(
+                        `La réponse était cinq, saurez-vous les reconnaître à la prochaine étape à la balise ${team.beacons[6]}`,
+                        () => advanceEnigma(6)
+                    );
+                } else {
+                    showToast(`Mauvaise réponse (+1 min au chrono). Retentez votre chance ! (${3 - attempts} essais restants)`, true);
+                    renderEnigma(5);
+                }
+            }
+        }
+
+        // --- E6 ---
+        function renderE6(card, team, unlocked) {
+            card.innerHTML = `
+                <div>
+                    <span class="text-xs font-bold text-orange-400 uppercase tracking-widest">Énigme 6</span>
+                    <h2 class="text-xl font-bold text-white mb-3">Dégustation des 5 fromages</h2>
+
+                    <div class="text-xs text-slate-300 space-y-3 mb-4">
+                        <p>Maintenant que vous vous êtes régalés, saurez-vous identifier et nommer les 5 fromages d'Auvergne présentés ? Saisissez leurs noms dans l'ordre de dégustation dans les champs ci-dessous.</p>
+						<p class="font-semibold text-orange-400">⚠️ Attention : Chaque mauvaise réponse ajoute 1 min de pénalité au chrono.</p>
+                        
+                        <div class="space-y-2 bg-slate-950 p-4 rounded-xl border border-slate-800">
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-orange-400 w-6">1 -</span>
+                                <input type="text" id="e6-input-1" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg p-2 text-white font-mono text-xs" placeholder="Fromage 1...">
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-orange-400 w-6">2 -</span>
+                                <input type="text" id="e6-input-2" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg p-2 text-white font-mono text-xs" placeholder="Fromage 2...">
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-orange-400 w-6">3 -</span>
+                                <input type="text" id="e6-input-3" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg p-2 text-white font-mono text-xs" placeholder="Fromage 3...">
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-orange-400 w-6">4 -</span>
+                                <input type="text" id="e6-input-4" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg p-2 text-white font-mono text-xs" placeholder="Fromage 4...">
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-orange-400 w-6">5 -</span>
+                                <input type="text" id="e6-input-5" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg p-2 text-white font-mono text-xs" placeholder="Fromage 5...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pt-3 border-t border-slate-800 flex justify-end">
+                    <button onclick="submitE6()" class="px-5 py-2.5 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-xs transition">Valider</button>
+                </div>
+            `;
+        }
+
+        function submitE6() {
+            saveCurrentInputState();
+            const f1 = document.getElementById('e6-input-1').value.trim().toLowerCase();
+            const f2 = document.getElementById('e6-input-2').value.trim().toLowerCase();
+            const f3 = document.getElementById('e6-input-3').value.trim().toLowerCase();
+            const f4 = document.getElementById('e6-input-4').value.trim().toLowerCase();
+            const f5 = document.getElementById('e6-input-5').value.trim().toLowerCase();
+
+            const match1 = (f1 === 'st nectaire' || f1 === 'saint nectaire');
+            const match2 = (f2 === 'cantal');
+            const match3 = (f3 === 'salers');
+            const match4 = (f4 === 'fourme d ambert' || f4 === "fourme d'ambert");
+            const match5 = (f5 === "bleu d'auvergne" || f5 === 'bleu dauvergne');
+
+            let errors = 0;
+            if (!match1) errors++;
+            if (!match2) errors++;
+            if (!match3) errors++;
+            if (!match4) errors++;
+            if (!match5) errors++;
+
+            const state = getGameState();
+            const team = state.teams[currentTeamId];
+
+            if (errors > 0) {
+                team.penaltySeconds += errors * 60;
+                saveGameState(state);
+                showSuccessModal(
+                    `Validation effectuée avec ${errors} erreur(s) (+${errors} min au chrono). Passons à l'énigme suivante !`,
+                    () => advanceEnigma(7)
+                );
+            } else {
+                showSuccessModal(
+                    `Parfait, les 5 fromages sont exacts ! Passons à la suite.`,
+                    () => advanceEnigma(7)
+                );
+            }
+        }
+
+        // --- E7 ---
+        let dragAssignments = {
+            press: [],
+            pers: [],
+            molle: []
+        };
+
+        function renderE7(card, team, unlocked) {
+            const allCheeses = ["Cantal", "St Nectaire", "Salers", "Bleu d'Auvergne", "Fourme d'Ambert"];
+
+            card.innerHTML = `
+                <div>
+                    <span class="text-xs font-bold text-orange-400 uppercase tracking-widest">Énigme 7</span>
+                    <h2 class="text-xl font-bold text-white mb-3">Classement des 5 fromages par type de pâte</h2>
+
+                    <div class="text-xs text-slate-300 space-y-3 mb-4">
+                        <p>Saurez-vous associer chacun des 5 fromages au type de pâte correspondant ? Glissez-déposez ou cliquez sur les fromages pour les ranger.</p>
+                        <p class="font-semibold text-orange-400">⚠️ Attention : Chaque mauvaise réponse ajoute 1 min de pénalité au chrono.</p>
+                        
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                            <span class="text-[11px] font-bold text-slate-400 block mb-2">Fromages à glisser ou cliquer :</span>
+                            <div class="flex flex-wrap gap-2" id="cheese-pool">
+                                ${allCheeses.map(c => `
+                                    <div draggable="true" ondragstart="onDragStart(event, '${c.replace(/'/g, "\\'")}')" onclick="quickAssign('${c.replace(/'/g, "\\'")}')" class="draggable-item bg-amber-900/60 hover:bg-amber-800 border border-amber-600/40 text-amber-200 px-3 py-1.5 rounded-lg text-xs font-semibold shadow">
+                                        🧀 ${c}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <div ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event, 'press')" class="p-3 bg-slate-950 border border-slate-800 rounded-xl transition" id="zone-press">
+                                <span class="font-bold text-white block mb-1">pâte pressée non cuite :</span>
+                                <div class="flex flex-wrap gap-2 min-h-[32px]" id="list-press"></div>
+                            </div>
+                            <div ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event, 'pers')" class="p-3 bg-slate-950 border border-slate-800 rounded-xl transition" id="zone-pers">
+                                <span class="font-bold text-white block mb-1">pâte persillée :</span>
+                                <div class="flex flex-wrap gap-2 min-h-[32px]" id="list-pers"></div>
+                            </div>
+                            <div ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event, 'molle')" class="p-3 bg-slate-950 border border-slate-800 rounded-xl transition" id="zone-molle">
+                                <span class="font-bold text-white block mb-1">pâte molle à croûte lavée :</span>
+                                <div class="flex flex-wrap gap-2 min-h-[32px]" id="list-molle"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${renderHintsHtml(7, unlocked, [
+                        "pourquoi voudriez vous laver la croûte, c’est ce qu’il y a de meilleur"
+                    ])}
+                </div>
+                <div class="pt-3 border-t border-slate-800 flex justify-between items-center">
+                    <button onclick="resetDrag()" class="text-xs text-slate-400 hover:text-white underline">Réinitialiser le tri</button>
+                    <button onclick="submitE7()" class="px-5 py-2.5 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-xs transition">Valider</button>
+                </div>
+            `;
+            updateDragUI();
+        }
+
+        let draggedCheese = null;
+        function onDragStart(e, cheese) { draggedCheese = cheese; }
+        function onDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+        function onDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+        function onDrop(e, cat) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            if (draggedCheese) {
+                assignCheese(draggedCheese, cat);
+                draggedCheese = null;
+            }
+        }
+        function quickAssign(cheese) {
+            if (!dragAssignments.press.includes(cheese) && !dragAssignments.pers.includes(cheese) && !dragAssignments.molle.includes(cheese)) {
+                assignCheese(cheese, 'press');
+            } else if (dragAssignments.press.includes(cheese)) {
+                assignCheese(cheese, 'pers');
+            } else if (dragAssignments.pers.includes(cheese)) {
+                assignCheese(cheese, 'molle');
+            } else {
+                removeFromDrag(cheese);
+            }
+        }
+        function assignCheese(cheese, cat) {
+            removeFromDrag(cheese);
+            dragAssignments[cat].push(cheese);
+            updateDragUI();
+        }
+        function removeFromDrag(cheese) {
+            ['press', 'pers', 'molle'].forEach(c => {
+                dragAssignments[c] = dragAssignments[c].filter(x => x !== cheese);
+            });
+        }
+        function resetDrag() {
+            dragAssignments = { press: [], pers: [], molle: [] };
+            updateDragUI();
+        }
+        function updateDragUI() {
+            const all = ["Cantal", "St Nectaire", "Salers", "Bleu d'Auvergne", "Fourme d'Ambert"];
+            const poolEl = document.getElementById('cheese-pool');
+            if (!poolEl) return;
+
+            const assigned = [...dragAssignments.press, ...dragAssignments.pers, ...dragAssignments.molle];
+            poolEl.innerHTML = all.filter(c => !assigned.includes(c)).map(c => `
+                <div draggable="true" ondragstart="onDragStart(event, '${c.replace(/'/g, "\\'")}')" onclick="quickAssign('${c.replace(/'/g, "\\'")}')" class="draggable-item bg-amber-900/60 hover:bg-amber-800 border border-amber-600/40 text-amber-200 px-3 py-1.5 rounded-lg text-xs font-semibold shadow">
+                    🧀 ${c}
+                </div>
+            `).join('');
+
+            ['press', 'pers', 'molle'].forEach(cat => {
+                const listEl = document.getElementById(`list-${cat}`);
+                listEl.innerHTML = dragAssignments[cat].map(c => `
+                    <span onclick="removeFromDrag('${c.replace(/'/g, "\\'")}'); updateDragUI();" class="cursor-pointer bg-slate-800 hover:bg-rose-950 border border-slate-700 text-slate-200 px-2.5 py-1 rounded-lg text-xs font-medium inline-flex items-center gap-1">
+                        ${c} <i class="fa-solid fa-xmark text-[10px] text-slate-400"></i>
+                    </span>
+                `).join('');
+            });
+        }
+
+        function submitE7() {
+            const pressOk = dragAssignments.press.length === 3 && 
+                            dragAssignments.press.includes('Cantal') && 
+                            dragAssignments.press.includes('St Nectaire') && 
+                            dragAssignments.press.includes('Salers');
+            const persOk = dragAssignments.pers.length === 2 && 
+                           dragAssignments.pers.includes("Bleu d'Auvergne") && 
+                           dragAssignments.pers.includes("Fourme d'Ambert");
+            const molleOk = dragAssignments.molle.length === 0;
+
+            if (pressOk && persOk && molleOk) {
+                const team = getGameState().teams[currentTeamId];
+                showSuccessModal(
+                    `Après cette pause gourmande, retour aux choses sérieuses! Si je vous ai fait venir jusqu'ici ce n'est pas juste pour vous empiffrer de fromage mais bien pour découvrir les merveilles cachées des volcans!\nUn des carriers a tout à l'heure évoqué un certain Jean Legay-Chevalier qui serait en train de forer les profondeurs à la recherche d'un précieux trésor!\nRendez-vous à la balise ${team.beacons[7]} pour voir ce qui s'y trame. Gardez l'œil ouvert sur le chemin, on ne sait jamais`,
+                    () => advanceEnigma(8)
+                );
+            } else {
+                const state = getGameState();
+                const team = state.teams[currentTeamId];
+                team.penaltySeconds += 60;
+                saveGameState(state);
+                showToast("Classement incorrect ! +1 min ajoutée au chrono.", true);
+            }
+        }
+
+        // --- E8 ---
+        function renderE8(card, team, unlocked) {
+            card.innerHTML = `
+                <div>
+                    <span class="text-xs font-bold text-orange-400 uppercase tracking-widest">Énigme 8</span>
+                    <h2 class="text-xl font-bold text-white mb-3">La Lettre de la Vieille Femme</h2>
+
+                    <div class="text-xs text-slate-300 space-y-3 mb-4">
+                        <p>Ce satané carrier a l'air de vous avoir joué un tour. Pas de Jean Legay-Chevalier à l'horizon et vous voilà égarés au "bout du monde". Mais voilà qu'une vieille femme s'approche. Elle vous tend un papier. Décodez-le, il vous remettra sur le bon chemin.</p>
+                        
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 italic text-slate-300 text-xs leading-relaxed">
+                            « Je ne veux pas <strong class="font-bold text-orange-400">oublier</strong> la source minérale d'Enval, propriété d'une vieille bonne femme qui l'a enfermée dans une cahute et qui la vend aux amateurs. C'est <strong class="font-bold text-orange-400">une eau</strong> limpide et acidulée, délicieuse au goût et dont les habitants de <strong class="font-bold text-orange-400">Riom</strong> font usage comme eau de <strong class="font-bold text-orange-400">Seltz</strong>. Ceux d'Enval la prisent à l'égal du vin, et, pour mon compte, je la préférererais beaucoup, quoique le vin des <strong class="font-bold text-orange-400">coteaux</strong> environnants soit très-bon. »
+                        </div>
+
+                        <p class="font-bold text-white">Alors où va-t-on?</p>
+                        <input type="text" id="e8-input" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white font-mono" placeholder="Entrez la balise ou destination...">
+                    </div>
+
+                    ${renderHintsHtml(8, unlocked, [
+                        "remettez les mots en gras dans le bon ordre",
+                        "le nom de la balise vous indiquera où vous diriger"
+                    ])}
+                </div>
+                <div class="pt-3 border-t border-slate-800 flex justify-end">
+                    <button onclick="submitE8()" class="px-5 py-2.5 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-xs transition">Valider</button>
+                </div>
+            `;
+        }
+
+        function submitE8() {
+            saveCurrentInputState();
+            const val = document.getElementById('e8-input').value.trim().toLowerCase();
+            const valid = ['5', '50', 'source', 'balise 5', 'source marie'];
+            if (valid.some(v => val.includes(v))) {
+                const team = getGameState().teams[currentTeamId];
+                showSuccessModal(
+                    `Bien joué! Ces mots de George Sand chantant la beauté et la nature sauvage des Gorges d'Enval et de la source Marie vous ont remis sur la trace d'une autre source qui parait-il pourrait alimenter le monde entier en eau. Rendez-vous vite à la balise ${team.beacons[8]}`,
+                    () => advanceEnigma(9)
+                );
+            } else {
+                showToast("Proposition incorrecte, retentez votre chance !", true);
+            }
+        }
+
+        // --- E9 ---
+        function selectE9Option(q, val) {
+            currentE9Answers[q] = val;
+            const container = document.getElementById(`e9-options-${q}`);
+            if (!container) return;
+            const buttons = container.querySelectorAll('button');
+            buttons.forEach(btn => {
+                if (btn.getAttribute('data-value') === val) {
+                    btn.className = "w-full text-left p-3 bg-orange-600 border border-orange-500 text-white rounded-xl font-semibold text-xs flex items-center gap-3 transition shadow";
+                } else {
+                    btn.className = "w-full text-left p-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 rounded-xl text-xs flex items-center gap-3 transition";
+                }
+            });
+        }
+
+        function renderE9(card, team, unlocked) {
+            currentE9Answers = { q1: null, q2: null, q3: null };
+            card.innerHTML = `
+                <div>
+                    <span class="text-xs font-bold text-orange-400 uppercase tracking-widest">Énigme 9</span>
+                    <h2 class="text-xl font-bold text-white mb-3">L'Épopée de l'Eau de Volvic</h2>
+
+                    <div class="text-xs text-slate-300 space-y-4 mb-4">
+                        <p>C'est entre 1925 et 1926 que la source du Goulet fut découverte à la suite de travaux commandées par Pierre Moity, qui alors maire de Volvic avait repris les recherches d'eau entamées par Legay-Chevalier.</p>
+                        <p>Il faut ensuite attendre 1961 et de nouveaux forages pour découvrir la source Clairvic. C'est l'eau de cette source, qui voyageant 5 ans à travers six couches de roches volcaniques, a été reconnue eau minérale naturelle en 1965 et commercialisée depuis par la société des Eaux de Volvic.</p>
+                        <p class="font-bold text-white">Saurez-vous être incollables sur cette belle entreprise et trouver les réponses qui vous guiderons vers le final de cette folle course ?</p>
+
+                        <!-- Q1 -->
+                        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2">
+                            <p class="font-bold text-amber-300">Combien de bouteilles sont approximativement produites chaque année par l'usine des Eaux de Volvic ?</p>
+                            <div id="e9-options-q1" class="space-y-2 pt-1">
+                                <button onclick="selectE9Option('q1', '150k')" data-value="150k" class="w-full text-left p-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 rounded-xl text-xs flex items-center gap-3 transition"><span class="text-base font-bold text-orange-400 w-5 text-center">X</span> <span>150 mille</span></button>
+                                <button onclick="selectE9Option('q1', '15m')" data-value="15m" class="w-full text-left p-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 rounded-xl text-xs flex items-center gap-3 transition"><span class="text-base font-bold text-orange-400 w-5 text-center">O</span> <span>15 millions</span></button>
+                                <button onclick="selectE9Option('q1', '1.5b')" data-value="1.5b" class="w-full text-left p-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 rounded-xl text-xs flex items-center gap-3 transition"><span class="text-base font-bold text-orange-400 w-5 text-center">✓</span> <span>1,5 milliard</span></button>
+                                <button onclick="selectE9Option('q1', '15b')" data-value="15b" class="w-full text-left p-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 rounded-xl text-xs flex items-center gap-3 transition"><span class="text-base font-bold text-orange-400 w-5 text-center">▢</span> <span>15 milliards</span></button>
+                            </div>
+                        </div>
+
+                        <!-- Q2 -->
+                        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2">
+                            <p class="font-bold text-amber-300">Quel est le nom de la machine qui permet la création des bouteilles ?</p>
+                            <div id="e9-options-q2" class="space-y-2 pt-1">
+                                <button onclick="selectE9Option('q2', 'injecteuse')" data-value="injecteuse" class="w-full text-left p-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 rounded-xl text-xs flex items-center gap-3 transition"><span class="text-base font-bold text-orange-400 w-5 text-center">X</span> <span>Injecteuse</span></button>
+                                <button onclick="selectE9Option('q2', 'bourreuse')" data-value="bourreuse" class="w-full text-left p-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 rounded-xl text-xs flex items-center gap-3 transition"><span class="text-base font-bold text-orange-400 w-5 text-center">O</span> <span>Bourreuse</span></button>
+                                <button onclick="selectE9Option('q2', 'souffleuse')" data-value="souffleuse" class="w-full text-left p-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 rounded-xl text-xs flex items-center gap-3 transition"><span class="text-base font-bold text-orange-400 w-5 text-center">✓</span> <span>Souffleuse</span></button>
+                                <button onclick="selectE9Option('q2', 'aspireuse')" data-value="aspireuse" class="w-full text-left p-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 rounded-xl text-xs flex items-center gap-3 transition"><span class="text-base font-bold text-orange-400 w-5 text-center">▢</span> <span>Aspireuse</span></button>
+                            </div>
+                        </div>
+
+                        <!-- Q3 -->
+                        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2">
+                            <p class="font-bold text-amber-300">Avant Antoine Dupont, quelle autre célébrité a été égérie des Eaux de Volvic ?</p>
+                            <div id="e9-options-q3" class="space-y-2 pt-1">
+                                <button onclick="selectE9Option('q3', 'zidane')" data-value="zidane" class="w-full text-left p-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 rounded-xl text-xs flex items-center gap-3 transition"><span class="text-base font-bold text-orange-400 w-5 text-center">X</span> <span>Zinédine Zidane</span></button>
+                                <button onclick="selectE9Option('q3', 'riner')" data-value="riner" class="w-full text-left p-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 rounded-xl text-xs flex items-center gap-3 transition"><span class="text-base font-bold text-orange-400 w-5 text-center">O</span> <span>Teddy Riner</span></button>
+                                <button onclick="selectE9Option('q3', 'kobe')" data-value="kobe" class="w-full text-left p-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 rounded-xl text-xs flex items-center gap-3 transition"><span class="text-base font-bold text-orange-400 w-5 text-center">✓</span> <span>Kobe Bryant</span></button>
+                                <button onclick="selectE9Option('q3', 'royet')" data-value="royet" class="w-full text-left p-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 rounded-xl text-xs flex items-center gap-3 transition"><span class="text-base font-bold text-orange-400 w-5 text-center">▢</span> <span>Aurélien Royet</span></button>
+                            </div>
+                        </div>
+
+                        <!-- Champ de saisie final VVX -->
+                        <div class="bg-slate-950 p-3.5 rounded-xl border border-orange-500/30 space-y-2">
+                            <p class="font-bold text-orange-400">Destination finale :</p>
+                            <input type="text" id="e9-final-code" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white font-mono uppercase tracking-widest text-sm" placeholder="Saisissez la réponse...">
+                        </div>
+                    </div>
+
+                    ${renderHintsHtml(9, unlocked, [
+                        "additionnés par les romains ils donnent la décennie quittée par votre hôte du week-end",
+                        "rendant hommage aux artistes et à la pierre, vous êtes déjà passés devant"
+                    ])}
+                </div>
+                <div class="pt-3 border-t border-slate-800 flex justify-end">
+                    <button onclick="submitE9()" class="px-5 py-2.5 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-xs transition">Valider l'Énigme 9</button>
+                </div>
+            `;
+        }
+
+        function submitE9() {
+            const finalCode = document.getElementById('e9-final-code').value.trim().toLowerCase();
+
+            const isQcmCorrect = currentE9Answers.q1 === '1.5b' && currentE9Answers.q2 === 'souffleuse' && currentE9Answers.q3 === 'zidane';
+            const isCodeCorrect = (finalCode === 'vvx');
+
+            if (isQcmCorrect && isCodeCorrect) {
+                showSuccessModal(
+                    `Bravo! Serez vous les plus rapides pour écrire votre nom au palmarès ?`,
+                    () => openFinalQuestionModal()
+                );
+            } else if (!isQcmCorrect && !isCodeCorrect) {
+                showToast("Le QCM et la combinaison finale sont incorrects !", true);
+            } else if (!isQcmCorrect) {
+                showToast("Vos réponses au QCM sont incorrectes !", true);
+            } else {
+                showToast("La combinaison / mot de passe final est incorrecte !", true);
+            }
+        }
+
+        function openFinalQuestionModal() {
+            document.getElementById('final-question-input').value = '';
+            document.getElementById('final-question-modal').classList.remove('hidden');
+        }
+
+        function submitFinalQuestion() {
+            const val = document.getElementById('final-question-input').value.trim().toLowerCase();
+            const state = getGameState();
+            const team = state.teams[currentTeamId];
+
+            if (val.includes('alexandre boucheix') || val.includes('boucheix') || val.includes('casquette verte')) {
+                team.completed = true;
+                saveGameState(state);
+
+                document.getElementById('final-question-modal').classList.add('hidden');
+                showVictoryScreen(team);
+            } else {
+                showToast("Réponse incorrecte, retentez votre chance !", true);
+            }
+        }
+
+        function renderHintsHtml(eNum, unlocked, hintTexts) {
+            if (hintTexts.length === 0) return '';
+            let html = `
+                <div class="mt-4 bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
+                    <span class="text-[11px] font-bold text-slate-400 block"><i class="fa-solid fa-lightbulb text-amber-400 mr-1"></i> Indices Disponibles :</span>
+            `;
+            hintTexts.forEach((txt, idx) => {
+                if (unlocked.includes(idx)) {
+                    html += `<div class="p-2 bg-amber-950/40 border border-amber-600/30 text-amber-200 text-xs rounded-lg"><strong>Indice ${idx+1} :</strong> ${txt}</div>`;
+                } else {
+                    html += `
+                        <button onclick="openHintModal(${idx})" class="w-full text-left p-2 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-400 text-xs rounded-lg flex justify-between items-center transition">
+                            <span>Utiliser l'Indice ${idx+1} (+2 min pénalité)</span>
+                            <i class="fa-solid fa-lock text-slate-500"></i>
+                        </button>
+                    `;
+                }
+            });
+            html += `</div>`;
+            return html;
+        }
+
+        function advanceEnigma(next) {
+            const state = getGameState();
+            state.teams[currentTeamId].currentEnigma = next;
+            saveGameState(state);
+            renderEnigma(next);
+        }
+
+        function showSuccessModal(msg, cb) {
+            const m = document.createElement('div');
+            m.className = "fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4";
+            m.innerHTML = `
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 text-center space-y-3">
+                    <div class="w-12 h-12 mx-auto rounded-full bg-emerald-500/20 text-emerald-400 text-2xl flex items-center justify-center">✓</div>
+                    <h3 class="text-base font-bold text-white">Réponse Découverte !</h3>
+                    <p class="text-xs text-slate-300 leading-relaxed">${msg}</p>
+                    <button id="modal-ok-btn" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition">Continuer</button>
+                </div>
+            `;
+            document.body.appendChild(m);
+            document.getElementById('modal-ok-btn').onclick = () => {
+                document.body.removeChild(m);
+                if (cb) cb();
+            };
+        }
+
+        function showVictoryScreen(team) {
+            clearInterval(timerInterval);
+            document.getElementById('view-game').classList.add('hidden');
+            document.getElementById('view-victory').classList.remove('hidden');
+            document.getElementById('vic-team-name').textContent = team.customName || `Équipe ${team.teamId}`;
+
+            const rawM = String(Math.floor(team.elapsedSeconds / 60)).padStart(2, '0');
+            const rawS = String(team.elapsedSeconds % 60).padStart(2, '0');
+            document.getElementById('vic-raw-time').textContent = `${rawM}:${rawS}`;
+
+            const penMin = team.penaltySeconds / 60;
+            document.getElementById('vic-penalty-time').textContent = `${penMin >= 0 ? '+' : ''}${penMin} min (${team.hintsUsed} indices)`;
+
+            const total = Math.max(0, team.elapsedSeconds + team.penaltySeconds);
+            const h = String(Math.floor(total / 3600)).padStart(2, '0');
+            const m = String(Math.floor((total % 3600) / 60)).padStart(2, '0');
+            const s = String(total % 60).padStart(2, '0');
+            document.getElementById('vic-final-time').textContent = `${h}:${m}:${s}`;
+        }
+
+        window.onload = function() {
+            getGameState();
+            updateHomeTeamButtons();
+        };
+    </script>
+</body>
+</html>
